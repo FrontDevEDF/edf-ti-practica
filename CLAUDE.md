@@ -13,6 +13,16 @@ Todos los datos son ficticios; hay secretos sembrados a propósito para la prác
 ## Antes de cada commit
 - Ejecuta `./scripts/revisa-secretos.sh`. Si encuentra algo nuevo (código de salida 1
   con hallazgos que no sean los 5 sembrados para la práctica), no hagas commit y avísame.
+  La lista de los 5 está en `docs/scripts.md` (sección "Secretos sembrados").
+
+## Cómo probar
+- No hay pruebas automatizadas. Un script se prueba ejecutándolo desde la raíz en
+  Git Bash, también con argumentos que fallen, y revisando el código de salida
+  (0 bien, 1 hallazgo o fallo esperado, 2 error de uso).
+- `respaldo.sh` exige `DB_HOST`, `DB_USER` y `DB_PASSWORD`; `notifica.sh` siempre sale
+  con 1 porque el webhook es ficticio.
+- Los problemas conocidos de `docs/scripts.md` (p. ej. `-mtime` en `rota-logs.sh`) son
+  intencionales para ejercicios: no los corrijas sin preguntar.
 
 ## Convenciones
 - Todo en español: comentarios, mensajes de commit y documentación.
