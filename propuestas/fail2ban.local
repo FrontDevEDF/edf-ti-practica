@@ -1,0 +1,52 @@
+# fail2ban.local - Propuesta para srv-app-prod-01 (NO APLICADA)
+# Basada en incidente/auth.log del 21-22/Nov/2026: fuerza bruta SSH lenta y
+# distribuida desde 4 IP que terminó en acceso como "soporte" (auth.log:2110).
+# Destino previsto: /etc/fail2ban/jail.local
+# Simulada contra los 294 "Failed password" del log antes de proponerla.
+
+[DEFAULT]
+# Solo localhost y el monitor (10.20.0.15, entra con llave: 102 accesos y 0 fallos).
+# No se excluye toda la red 10.20.0.0/16: un equipo interno comprometido
+# también debe poder banearse.
+ignoreip = 127.0.0.1/8 ::1 10.20.0.15
+
+[sshd]
+enabled  = true
+mode     = normal
+port     = ssh
+logpath  = %(sshd_log)s
+backend  = %(sshd_backend)s
+
+# findtime = 1 hora.
+# Los atacantes hacían como máximo 2 fallos cada 10 min por IP, pensado para
+# esquivar el valor por defecto (10m / 5 intentos). Simulado con 10m: no banea
+# a ninguna de las 4 IP. En 60 min cada una llega a 10 fallos.
+findtime = 1h
+
+# maxretry = 5.
+# Cada IP atacante junta 5 fallos en su primera hora (primer ban entre 00:05 y
+# 00:48). El único usuario legítimo que falló (mgarcia, 10.20.0.61) tuvo
+# 2 fallos (auth.log:226 y :229): quedan 3 de margen.
+# Con 3 o 4 también se detiene el ataque, pero 3 banea además a 15 IP de ruido
+# de fondo y deja a mgarcia a un fallo del bloqueo.
+maxretry = 5
+
+# bantime = 1 hora.
+# El ban corto solo frena; el bloqueo largo lo da la jaula recidive. Si
+# alguien interno se equivoca de contraseña, se libera solo en una hora.
+bantime  = 1h
+
+[recidive]
+# Lee /var/log/fail2ban.log y cuenta los "Ban" de la jaula sshd.
+enabled  = true
+logpath  = /var/log/fail2ban.log
+banaction = %(banaction_allports)s
+
+# 3 bans en 24 h = 1 semana bloqueada, en todos los puertos.
+# Simulado: las 4 IP reciben su tercer ban entre 02:57 y 03:54 y quedan
+# bloqueadas una semana. 198.51.100.23 está bloqueada a las 05:13:41,
+# cuando entró con "soporte", y nunca llega a ese intento.
+# El ataque duró unas 5 h 30 min, así que 24 h cubre de sobra la ventana.
+findtime = 1d
+maxretry = 3
+bantime  = 1w
